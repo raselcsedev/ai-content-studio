@@ -19,12 +19,22 @@ export const authOptions: NextAuthOptions = {
         // Development/Test mode - allow dummy credentials without DB
         if (process.env.NEXTAUTH_TEST_MODE === "true") {
           const testUsers = [
-            { email: "test@example.com", password: "test123", name: "Test User" },
-            { email: "demo@example.com", password: "demo123", name: "Demo User" },
+            {
+              email: "test@example.com",
+              password: "test123",
+              name: "Test User",
+            },
+            {
+              email: "demo@example.com",
+              password: "demo123",
+              name: "Demo User",
+            },
           ];
 
           const testUser = testUsers.find(
-            (u) => u.email === credentials.email && u.password === credentials.password
+            (u) =>
+              u.email === credentials.email &&
+              u.password === credentials.password,
           );
 
           if (testUser) {
@@ -37,14 +47,16 @@ export const authOptions: NextAuthOptions = {
             };
           }
 
-          throw new Error("Invalid test credentials. Try: test@example.com / test123");
+          throw new Error(
+            "Invalid test credentials. Try: test@example.com / test123",
+          );
         }
 
         // Production mode - validate against database
         await dbConnect();
-
+        console.log("Login email:", credentials.email);
         const user = await User.findOne({ email: credentials.email }).select(
-          "+password"
+          "+password",
         );
 
         if (!user) {
@@ -52,13 +64,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         const isPasswordValid = await user.comparePassword(
-          credentials.password
+          credentials.password,
         );
 
         if (!isPasswordValid) {
           throw new Error("Invalid password");
         }
-
+console.log("Password valid:", isPasswordValid);
         return {
           id: user._id.toString(),
           name: user.name,
