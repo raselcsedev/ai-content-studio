@@ -64,7 +64,7 @@ export function HistoryTable() {
 
   useEffect(() => {
     fetchHistory();
-  }, [page, filterType]);
+  }, [page, filterType, fetchHistory]);
 
   const table = useReactTable({
     columns,

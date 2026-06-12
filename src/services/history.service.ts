@@ -1,5 +1,5 @@
 import dbConnect from "@/lib/db";
-import Generation, { IGenerationDocument } from "@/models/generation.model";
+import Generation from "@/models/generation.model";
 import History from "@/models/history.model";
 import type { GenerationType } from "@/types";
 
@@ -32,7 +32,6 @@ export async function createGeneration(input: CreateGenerationInput) {
     metadata: input.metadata || {},
   });
 
-  // Create history entry
   await History.create({
     userId: input.userId,
     generationId: generation._id,
@@ -43,12 +42,11 @@ export async function createGeneration(input: CreateGenerationInput) {
 }
 
 export async function getGenerations(params: GetHistoryParams) {
-  // Test mode - return mock data without DB
   if (process.env.NEXTAUTH_TEST_MODE === "true") {
-    const mockItems: IGenerationDocument[] = [
+    const mockItems: any[] = [
       {
-        _id: "mock-1" as any,
-        userId: params.userId as any,
+        _id: "mock-1",
+        userId: params.userId,
         type: "blog",
         title: "Getting Started with React Hooks",
         prompt: "Write about React Hooks best practices",
@@ -58,8 +56,8 @@ export async function getGenerations(params: GetHistoryParams) {
         updatedAt: new Date(),
       },
       {
-        _id: "mock-2" as any,
-        userId: params.userId as any,
+        _id: "mock-2",
+        userId: params.userId,
         type: "email",
         title: "Newsletter for June",
         prompt: "Create a weekly newsletter",
@@ -69,6 +67,7 @@ export async function getGenerations(params: GetHistoryParams) {
         updatedAt: new Date(Date.now() - 86400000),
       },
     ];
+
     return {
       items: mockItems,
       total: mockItems.length,
@@ -102,7 +101,7 @@ export async function getGenerations(params: GetHistoryParams) {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .lean<IGenerationDocument>(),
+      .lean<any>(),
     Generation.countDocuments(query),
   ]);
 
@@ -117,15 +116,19 @@ export async function getGenerations(params: GetHistoryParams) {
 
 export async function getGenerationById(
   generationId: string,
-  userId: string
-): Promise<IGenerationDocument | null> {
+  userId: string,
+): Promise<any> {
   await dbConnect();
-  return Generation.findOne({ _id: generationId, userId }).lean<IGenerationDocument>();
+
+  return Generation.findOne({
+    _id: generationId,
+    userId,
+  }).lean();
 }
 
 export async function deleteGeneration(
   generationId: string,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   await dbConnect();
 
@@ -135,12 +138,12 @@ export async function deleteGeneration(
   });
 
   if (result.deletedCount > 0) {
-    // Log deletion in history
     await History.create({
       userId,
       generationId,
       action: "deleted",
     });
+
     return true;
   }
 
@@ -149,7 +152,7 @@ export async function deleteGeneration(
 
 export async function deleteMultipleGenerations(
   generationIds: string[],
-  userId: string
+  userId: string,
 ): Promise<number> {
   await dbConnect();
 
@@ -163,14 +166,13 @@ export async function deleteMultipleGenerations(
 
 export async function getRecentGenerations(
   userId: string,
-  limit = 5
-): Promise<IGenerationDocument[]> {
-  // Test mode - return mock data without DB
+  limit = 5,
+): Promise<any[]> {
   if (process.env.NEXTAUTH_TEST_MODE === "true") {
-    const mockGenerations: IGenerationDocument[] = [
+    const mockGenerations: any[] = [
       {
-        _id: "mock-1" as any,
-        userId: userId as any,
+        _id: "mock-1",
+        userId,
         type: "blog",
         title: "Getting Started with React Hooks",
         prompt: "Write about React Hooks best practices",
@@ -180,8 +182,8 @@ export async function getRecentGenerations(
         updatedAt: new Date(),
       },
       {
-        _id: "mock-2" as any,
-        userId: userId as any,
+        _id: "mock-2",
+        userId,
         type: "email",
         title: "Newsletter for June",
         prompt: "Create a weekly newsletter",
@@ -191,8 +193,8 @@ export async function getRecentGenerations(
         updatedAt: new Date(Date.now() - 86400000),
       },
       {
-        _id: "mock-3" as any,
-        userId: userId as any,
+        _id: "mock-3",
+        userId,
         type: "code",
         title: "Authentication Middleware",
         prompt: "Write middleware for JWT auth",
@@ -202,12 +204,14 @@ export async function getRecentGenerations(
         updatedAt: new Date(Date.now() - 172800000),
       },
     ];
+
     return mockGenerations.slice(0, limit);
   }
 
   await dbConnect();
+
   return Generation.find({ userId })
     .sort({ createdAt: -1 })
     .limit(limit)
-    .lean<IGenerationDocument[]>() as unknown as IGenerationDocument[];
+    .lean<any>();
 }

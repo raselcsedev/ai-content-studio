@@ -49,7 +49,7 @@ export function SettingsPanel() {
         email: session.user.email ?? "",
       });
     }
-  }, [session]);
+  }, [session, profileForm]);
 
   async function onSaveProfile(data: ProfileFormData) {
     setIsSavingProfile(true);
